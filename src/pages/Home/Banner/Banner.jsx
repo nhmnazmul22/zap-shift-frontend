@@ -27,7 +27,9 @@ const Banner = () => {
     >
       {bannerImages.map((image, index) => (
         <div key={index} className="relative">
-          <img src={image} />
+          <figure className="rounded-2xl overflow-hidden" >
+            <img src={image}/>
+          </figure>
           <div className="absolute bottom-[100px] left-28 flex items-center space-x-3">
             <Link to="/track-parcel" className="flex items-center group">
               <Button className="rounded-full!">Track Your Parcel</Button>
