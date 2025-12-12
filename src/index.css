@@ -17,7 +17,6 @@
   --color-base-100: #f0f3f6;
   --color-base-200: #eaeced;
   --color-primary-content: #0f172a;
-  --color-accent: #0f172a;
   --color-base-100: #dadada;
   --color-base-200: #606060;
   --color-blue-200: #c3dfe2;
@@ -31,4 +30,5 @@
 
 body {
   background: #eaeced;
+  min-height: 100vh;
 }
