@@ -1,8 +1,57 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router";
 import InputBox from "../../../components/common/InputBox";
 import ImageUploadIcon from "../../../assets/image-upload.svg";
+import { useForm } from "react-hook-form";
+import { toBase64 } from "../../../lib/utils";
+
 const Register = () => {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isLoading },
+  } = useForm();
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setValue("imageFile", file, { shouldDirty: true, shouldValidate: true });
+      const url = URL.createObjectURL(file);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+    } else {
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return "";
+      });
+    }
+  };
+
+  const handleRegister = async (data) => {
+    if (errors) {
+      console.log(errors);
+    }
+    if (data.imageFile) {
+      data.imgUrl = await toBase64(data.imageFile);
+    }
+
+    const formData = new FormData();
+    formData.append("fullName", data.fullName);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("avatar", data.imageFile);
+    formData.append("imgUrl", data.imgUrl);
+
+    setTimeout(() => {
+      const obj = Object.fromEntries(formData.entries());
+      console.log(obj);
+    }, 2000);
+  };
+
   return (
     <div className="w-full">
       <h2 className="text-black font-extrabold text-5xl">Create an Account</h2>
@@ -11,33 +60,70 @@ const Register = () => {
       </p>
       <div>
         <div className="mt-5 shrink-0">
-          <form action="">
+          <form onSubmit={handleSubmit(handleRegister)}>
             <fieldset className="fieldset">
-              <div className="avatar mb-2">
+              <div className="avatar mb-2 relative">
                 <div className="bg-neutral w-14 rounded-full">
-                  <img src={ImageUploadIcon} alt="Image upload icon" />
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Image upload icon" />
+                  ) : (
+                    <img src={ImageUploadIcon} alt="Image upload icon" />
+                  )}
                 </div>
+                <input
+                  type="file"
+                  className="absolute border w-14 h-14 rounded-full opacity-0"
+                  onChange={handleFileChange}
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <InputBox
-                  label="Name"
+                  label="Full Name"
                   placeholder="Enter your Name"
                   type="text"
+                  {...register("fullName", {
+                    required: "Full Name is required",
+                  })}
+                  isError={errors?.fullName && true}
+                  errorMessage={errors?.fullName?.message}
                 ></InputBox>
                 <InputBox
                   label="Email"
                   placeholder="Enter your Email"
                   type="email"
+                  {...register("email", {
+                    required: "Email Address is required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/,
+                      message: "Enter a valid email address",
+                    },
+                  })}
+                  isError={errors?.email && true}
+                  errorMessage={errors?.email?.message}
                 ></InputBox>
                 <InputBox
                   label="Password"
                   placeholder="Enter your password"
                   type="password"
-                  pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                  title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
+                  {...register("password", {
+                    required: "Password is required",
+                    pattern: {
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*\W).{8,}$/,
+                      message:
+                        "Must contain 8 chars, upper, lower, number & special character",
+                    },
+                  })}
+                  isError={errors?.password && true}
+                  errorMessage={errors?.password?.message}
                 ></InputBox>
               </div>
-              <button className="btn btn-primary mt-4">Register</button>
+              <button
+                disabled={isLoading}
+                type="submit"
+                className="btn btn-primary mt-4"
+              >
+                {isLoading ? "Creating Account..." : "Register"}
+              </button>
               <div className="text-base text-base-200 font-medium">
                 Already have an account?
                 <Link
